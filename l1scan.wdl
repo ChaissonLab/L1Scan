@@ -9,6 +9,7 @@ workflow l1Scan {
         File BAM_INDEX
         File L1HS
 	File REFERENCE
+	File REFERENCE_INDEX	
         String SAMPLE = basename(BAM, ".bam")
         Int cpu
         Int mem
@@ -21,7 +22,8 @@ workflow l1Scan {
         bam = BAM,
         bam_index = BAM_INDEX,
 	reference = REFERENCE,
-        l1File = L1HS,
+	reference_index = REFERENCE_INDEX,
+        l1hs = L1HS,
         sample = SAMPLE,
 	taskCpu = cpu,
 	taskMem = mem,
