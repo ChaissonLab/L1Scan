@@ -4,7 +4,7 @@ alnPairs: AlnPairs.cpp
 	g++ -O2 AlnPairs.cpp -IWFA/bindings -IWFA -o alnPairs -L WFA/lib -lwfacpp
 
 l1scan: L1Scan.cpp
-	g++ -O2 L1Scan.cpp -o l1scan -Iseqan/include  -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -lhts -L WFA/lib -lwfacpp
+	g++ -O2 L1Scan.cpp -o l1scan -Iseqan/include  -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -lhts 
 
 
 align2: Align2.cpp
