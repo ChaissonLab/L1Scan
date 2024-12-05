@@ -41,6 +41,7 @@ task l1scanTask {
         File bam
         File bam_index
 	File reference
+	File reference_index	
 	File l1hs
         String sample
         Int taskCpu
