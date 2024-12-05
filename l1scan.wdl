@@ -16,7 +16,7 @@ workflow l1Scan {
         Int maxCoverage
     }
 
-    call l1scanAnnotation {
+    call l1scanTask {
         input:
         bam = BAM,
         bam_index = BAM_INDEX,
@@ -30,11 +30,11 @@ workflow l1Scan {
     }
 
     output {
-        File l1hsOut = l1scanAnnotation.outTab
+        File l1hsOut = l1scanTask.outTab
     }
 }
 
-task l1scan {
+task l1scanTask {
     input {
         File bam
         File bam_index
