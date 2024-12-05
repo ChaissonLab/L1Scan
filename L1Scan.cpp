@@ -15,7 +15,7 @@
 
 
 using namespace std;
-using namespace seqan2;
+using namespace seqan;
 typedef Seed<Simple> TSeed;
 typedef SeedSet<TSeed> TSeedSet;
 typedef Iterator<TSeedSet>::Type TIterator;
