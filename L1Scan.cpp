@@ -485,7 +485,7 @@ int main(int argc, char** argv) {
   int nReads=0;
   ofstream fastaOut("ins_seq.fasta");
 
-  
+  cout << "#chrom" << "\t" << "refPos" << "\t" << "readName" << "\t" << "strand" << "\t" << "insLen" << "\t" << "alnIdentity" << "\t" << "before_tsd_len" << "\t" << "beforeTsd" << "\t" << "after_tsd_len" << "\t" << "afterTsd" << "\t" << "regionAlnIdentity" << "\t" << "regionNumMatches" << "\t" << "inserted_seq" << endl;  
   while (sam_read1(bamFile, header, aln) >= 0) {
     ++nReads;
     if (nReads % 10000 == 0) {
@@ -568,7 +568,7 @@ int main(int argc, char** argv) {
 	    StoreKmerToPos(refRegion, k, refRegionMap);
 	    AlignBidirectional( inserted_seq, refRegion, k, refRegionMap, alnDir, regionAlnIdentity, regionNumMatches,
 				opPos, opLens, opSeq);
-	    cout << chrom << "\t" << refPos << "\t" << read_name << "\t" << strand << "\t" << inserted_seq.size() << "\t" << alnIdentity << "\t" << before_tsd_len << "\t" << beforeTsd << "\t" << after_tsd_len << "\t" << afterTsd << "\t" << regionAlnIdentity << "\t" << regionNumMatches << endl;
+	    cout << chrom << "\t" << refPos << "\t" << read_name << "\t" << strand << "\t" << inserted_seq.size() << "\t" << alnIdentity << "\t" << before_tsd_len << "\t" << beforeTsd << "\t" << after_tsd_len << "\t" << afterTsd << "\t" << regionAlnIdentity << "\t" << regionNumMatches << "\t" << inserted_seq << endl;
 	    
 	  }
 	}
