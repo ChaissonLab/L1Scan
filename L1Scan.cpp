@@ -381,7 +381,25 @@ void AlignBidirectional( std::string& query, std::string& ref,
       int span = max(querySpan, refSpan);
       int minAnchors = (int)(0.5 * ( span / k ));
       if (length(chain) > minAnchors) {
-	result = bandedChainAlignment(alignment, chain, scoringScheme, scoringScheme,  alignConfig);
+	int lc=length(chain);
+	i=0;
+	for (auto c: chain) {
+	  cout << i << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) << endl;
+	  i++;
+	}
+	try {
+	  result = bandedChainAlignment(alignment, chain, scoringScheme, scoringScheme,  alignConfig);
+	}
+	catch(seqan::ClassTest::AssertionFailedException e) {
+	  result=0;
+	  ofstream queryOut("query_out.seq");
+	  queryOut << query << endl;
+	  queryOut.close();
+	  ofstream refOut("ref_out.seq");
+	  refOut << ref << endl;
+	  refOut.close();	  
+	}
+
       }
       else {
 	//	cout << "Skipping for banded alignment " << length(chain) << "\t" << minAnchors << endl;
@@ -426,7 +444,12 @@ void AlignBidirectional( std::string& query, std::string& ref,
       int span = max(querySpan, refSpan);
       int minAnchors = (int)(0.5 * ( span / k ));
       if (length(revChain) > minAnchors) {
-	revResult = bandedChainAlignment(revAlignment, revChain, scoringScheme, scoringScheme,  alignConfig);
+	try {
+	  revResult = bandedChainAlignment(revAlignment, revChain, scoringScheme, scoringScheme,  alignConfig);
+	}
+	catch(seqan::ClassTest::AssertionFailedException e) {	  
+	  revResult =0;
+	}
       }
       else {
 	//	cout << "Skipping rev banded alignment " << length(revChain) << "\t" << minAnchors << endl;
@@ -483,7 +506,6 @@ int main(int argc, char** argv) {
 
   // Iterate through alignments
   int nReads=0;
-  ofstream fastaOut("ins_seq.fasta");
 
   cout << "#chrom" << "\t" << "refPos" << "\t" << "readName" << "\t" << "strand" << "\t" << "insLen" << "\t" << "alnIdentity" << "\t" << "before_tsd_len" << "\t" << "beforeTsd" << "\t" << "after_tsd_len" << "\t" << "afterTsd" << "\t" << "regionAlnIdentity" << "\t" << "regionNumMatches" << "\t" << "inserted_seq" << endl;  
   while (sam_read1(bamFile, header, aln) >= 0) {
@@ -495,19 +517,20 @@ int main(int argc, char** argv) {
     int32_t refPos = aln->core.pos; // 0-based alignment position
     std::string chrom = header->target_name[aln->core.tid];
     std::string query_seq = get_query_sequence(aln);
+    if (query_seq.size() < 2) {
+      continue;
+    }
     std::string read_name(bam_get_qname(aln));
     bool isReverseStrand = aln->core.flag & BAM_FREVERSE;
     char strand = '+';
     if (isReverseStrand) { strand = '-';}
     
     int32_t queryPos = 0;            // Query position within the read
-
 	
     for (uint32_t i = 0; i < aln->core.n_cigar; ++i) {
       uint32_t op = bam_cigar_op(cigar[i]);
       uint32_t opLen = bam_cigar_oplen(cigar[i]);
-      
-      if (op == BAM_CINS and opLen > 500) { // Check for insertion
+      if (op == BAM_CINS and opLen > 500 and opLen < 9000) { // Check for insertion
 	// Extract inserted sequence from the query
 	int query_start = queryPos;
 	std::string inserted_seq = query_seq.substr(query_start, opLen);
@@ -556,6 +579,7 @@ int main(int argc, char** argv) {
 	    int refChromLen = faidx_seq_len(fai, chrom.c_str()); // Replace "chr1" with the desired chromosome
 	    int refRegionEnd   = min((int) refChromLen, (int) (refPos + inserted_seq.size()));
 	    std::string refRegion = fetch_reference_sequence(fai, chrom, refRegionStart, refRegionEnd - refRegionStart);
+	    std::transform(refRegion.begin(), refRegion.end(), refRegion.begin(), ::toupper);	    
 	    
 	    if (beforeTsd == "") { beforeTsd = "NA";}
 	    if (afterTsd == "") { afterTsd = "NA";}
