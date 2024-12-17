@@ -60,7 +60,7 @@ task l1scanTask {
     }
 
     runtime {
-        docker: "mchaisso/l1scan:v1.1"
+        docker: "mchaisso/l1scan:v1.1.4"
         cpu: taskCpu
         memory: taskMem+"GB"
         disks: "local-disk " + taskDiskSizeGb + " LOCAL"
