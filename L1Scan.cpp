@@ -327,37 +327,64 @@ void AlignBidirectional( std::string& query, std::string& ref,
   Align<DnaString, ArrayGaps> alignment, revAlignment;
   int result=0, revResult=0;
   Score<int, Simple> scoringScheme(2, -1, -2);
-  AlignConfig<false, true, true, false> alignConfig;
-    int i =0;  
+  //  AlignConfig<false, false, false, false> alignConfig;
+  AlignConfig<true, true, true, true> alignConfig;  
+    int chainIndex =0;  
 
     /*
   for (i=0; i + 1 < length(chain); i++) {
     cout << beginPositionH(chain[i]) <<  "\t" << beginPositionH(chain[i+1]) - beginPositionH(chain[i]) - k <<   "\t" << beginPositionV(chain[i]) << "\t" << beginPositionV(chain[i+1]) - beginPositionV(chain[i]) - k << endl;
   }
     */
-  
+    int ph, pv;
   if (length(queryMatches) > 0) {
     chainSeedsGlobally(chain, queryMatches, SparseChaining());
-    //    cout << "Before pruning:\t" << length(queryMatches) << "\t" << length(chain) << endl;    
-    for (i=length(chain); i > 1; i--) {
-      if (beginPositionH(chain[i-1]) - beginPositionH(chain[i-2]) - k < 30 and
-	  beginPositionV(chain[i-1]) - beginPositionV(chain[i-2]) - k < 30) {
+    int pri =0;
+    /*
+    cout << "Before pruning:\t" << length(queryMatches) << "\t" << length(chain) << endl;
+    ph=0; pv=0;
+    for (auto c: chain) {
+      cout << pri << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) <<  "\t" << beginPositionH(c) - ph << "\t" << beginPositionV(c) - pv << endl;
+      ph=beginPositionH(c);
+      pv=beginPositionV(c);
+      pri++;
+    }
+    */
+    int lc=length(chain);
+    chainIndex=length(chain);
+    chainIndex=lc;
+    for (; chainIndex > 1; chainIndex--) {
+      if (beginPositionH(chain[chainIndex-1]) - beginPositionH(chain[chainIndex-2]) - k < 30 and
+	  beginPositionV(chain[chainIndex-1]) - beginPositionV(chain[chainIndex-2]) - k < 30) {
 	break;
       }
       else {
 	eraseBack(chain);
+	lc=length(chain);
       }
     }
-    for (i=0; i + 1 < length(chain); i++) {
-      if (beginPositionH(chain[i+1]) - beginPositionH(chain[i]) - k < 30 and
-	  beginPositionV(chain[i+1]) - beginPositionV(chain[i]) - k < 30) {
+    for (chainIndex=0; chainIndex + 1 < length(chain); chainIndex++) {
+      if (beginPositionH(chain[chainIndex+1]) - beginPositionH(chain[chainIndex]) - k < 30 and
+	  beginPositionV(chain[chainIndex+1]) - beginPositionV(chain[chainIndex]) - k < 30) {
 	break;
       }
     }
-    if (i > 0) {
-      erase(chain, i);
+    int chainLength =length(chain);
+    if (chainIndex > 0) {
+      erase(chain, 0, chainIndex+1);
+      chainLength=length(chain);
     }
-    int i =0;  
+    /*
+    cout << "After pruning " << endl;
+    ph=0; pv=0;
+    pri=0;
+    for (auto c: chain) {
+      cout << pri << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) <<  "\t" << beginPositionH(c) - ph << "\t" << beginPositionV(c) - pv << endl;
+      ph=beginPositionH(c);
+      pv=beginPositionV(c);
+      pri++;
+    }
+    */
     //    cout << "After pruning: " << "\t" << length(chain) << endl;
     /*
   for (i=0; i + 1 < length(chain); i++) {
@@ -374,21 +401,31 @@ void AlignBidirectional( std::string& query, std::string& ref,
     resize(rows(alignment), 2);
     assignSource(row(alignment, 0), query);
     assignSource(row(alignment, 1), ref);
-    if (  length(chain) > 2) {
-      int lastChain = length(chain)-1;
+    chainLength = length(chain);
+    ph=0,pv=0;    
+    if (  chainLength > 2) {
+      int lastChain = chainLength - 1;
       int querySpan = beginPositionV(chain[lastChain])  - beginPositionV(chain[0]);
       int refSpan   = beginPositionH(chain[lastChain])  - beginPositionH(chain[0]);
-      int span = max(querySpan, refSpan);
+      int span = min(querySpan, refSpan);
       int minAnchors = (int)(0.5 * ( span / k ));
-      if (length(chain) > minAnchors) {
+
+      
+      if (chainLength > minAnchors) {
 	int lc=length(chain);
-	i=0;
+	int pci=0;
+	/*
 	for (auto c: chain) {
-	  cout << i << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) << endl;
-	  i++;
+	  cout << pci << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) <<  "\t" << beginPositionH(c) - ph << "\t" << beginPositionV(c) - pv << endl;
+	  ph=beginPositionH(c);
+	  pv=beginPositionV(c);
+	  pci++;
 	}
+	*/
 	try {
-	  result = bandedChainAlignment(alignment, chain, scoringScheme, scoringScheme,  alignConfig);
+	  result = bandedChainAlignment(alignment, chain, scoringScheme, scoringScheme,  alignConfig, 10);
+	  //	  cout << "Alignment " << alignment << endl;
+	  //	  cout << query << endl;
 	}
 	catch(seqan::ClassTest::AssertionFailedException e) {
 	  result=0;
@@ -416,9 +453,25 @@ void AlignBidirectional( std::string& query, std::string& ref,
     assignSource(row(revAlignment, 0), revQuery);
     assignSource(row(revAlignment, 1), ref);
     int i =0;
-    //    cout << "Rev chain before pruning: " << length(revChain) << endl;
-
+    
+    int nh, ch, nv, cv, ph, pv;
+    ph=0; pv=0;
+    /*
+    cout << "Rev chain before pruning: " << length(revChain) << endl;    
+    for (auto c: revChain) {
+      cout << i << "\t" << beginPositionH(c) << "\t" << beginPositionV(c) << "\t" << beginPositionH(c) - ph << "\t" << beginPositionV(c) - pv << endl;
+      ph = beginPositionH(c);
+      pv = beginPositionV(c);
+      i++;
+    }
+    */
+    int revChainLength = length(revChain);    
     for (i=length(revChain); i > 1; i--) {
+      ph = beginPositionH(revChain[i-1]);
+      ch = beginPositionH(revChain[i-2]);
+      pv = beginPositionV(revChain[i-1]);
+      cv = beginPositionV(revChain[i-2]);
+      
       if (beginPositionH(revChain[i-1]) - beginPositionH(revChain[i-2]) - k < 30 and
 	  beginPositionV(revChain[i-1]) - beginPositionV(revChain[i-2]) - k < 30) {
 	break;
@@ -428,24 +481,30 @@ void AlignBidirectional( std::string& query, std::string& ref,
       }
     }
     for (i=0; i + 1 < length(revChain); i++) {
+      nh = beginPositionH(revChain[i+1]);
+      ch = beginPositionH(revChain[i]);
+      nv = beginPositionV(revChain[i+1]);
+      cv = beginPositionV(revChain[i]);
       if (beginPositionH(revChain[i+1]) - beginPositionH(revChain[i]) - k < 30 and
 	  beginPositionV(revChain[i+1]) - beginPositionV(revChain[i]) - k < 30) {
 	break;
       }
     }
     if (i > 0) {
-      erase(revChain, i);
+      erase(revChain, 0, i+1);
     }
     //    cout << "Rev chain after pruning: " << length(revChain) << endl;    
     if (length(revChain) > 2) {
       int lastRevChain = length(revChain)-1;
       int querySpan = beginPositionV(revChain[lastRevChain])  - beginPositionV(revChain[0]);
       int refSpan   = beginPositionH(revChain[lastRevChain])  - beginPositionH(revChain[0]);
-      int span = max(querySpan, refSpan);
+      int span = min(querySpan, refSpan);
       int minAnchors = (int)(0.5 * ( span / k ));
-      if (length(revChain) > minAnchors) {
+      revChainLength = length(revChain);
+      if (revChainLength > minAnchors) {
 	try {
-	  revResult = bandedChainAlignment(revAlignment, revChain, scoringScheme, scoringScheme,  alignConfig);
+	  revResult = bandedChainAlignment(revAlignment, revChain, scoringScheme, scoringScheme,  alignConfig, 10);
+	  //	  cout << "rev alignment " << revAlignment << endl;
 	}
 	catch(seqan::ClassTest::AssertionFailedException e) {	  
 	  revResult =0;

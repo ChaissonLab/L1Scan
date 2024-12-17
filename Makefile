@@ -4,7 +4,7 @@ alnPairs: AlnPairs.cpp
 	g++ -O2 AlnPairs.cpp -IWFA/bindings -IWFA -o $@ -L WFA/lib -lwfacpp
 
 l1scan: L1Scan.cpp
-	g++ -DSEQAN_ENABLE_TESTING -g L1Scan.cpp -o $@ -Iseqan/include  -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -lhts 
+	g++ -DSEQAN_ENABLE_TESTING -O2 L1Scan.cpp -o $@ -Iseqan/include  -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -lhts 
 
 
 minimalTest: MinimalTest.cpp
